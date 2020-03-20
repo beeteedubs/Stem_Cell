@@ -27,6 +27,8 @@ prolif_counter, iffy_counter, senescent_counter = 1,1,1
 curr = IJ.openImage("D:/Stem_Cells/All_Tiff_Files/GT_A5-Stitch.tif")
 IJ.log(str(type(curr)))
 c1, c2, c3 = ChannelSplitter.split(curr)
+length, height = 200, 200
+batch_folder = "Batch_1"
 #.show()
 #IJ.log("num channels of curr_image: " + str(curr_image.nChannels))
 #curr_image.setActiveChannels("011")
@@ -49,44 +51,47 @@ next(csv_reader)
 next(csv_reader)
 
 IJ.log("\n Reading .csv \n")
-def cropAndSave(name):
+def cropAndSave(name, row):
     # for checking bounds and making Regions of Interest (ROI, or aka rectangles)
     # 4.818 comes from converting micron to pixels
     global prolif_counter
     global iffy_counter
     global senescent_counter
     global curr
-
+    global length
+    global height
+    global batch_folder
     # checking for out of bounds
     if float(row[4]) < 152.0 or float(row[5]) < 152.0 or float(row[4]) + float(row[6])> 27000 or float(row[5]) + float(row[7]) > 27000:
         IJ.log("outta bounds")
         return
     else:
-        #IJ.selectWindow("GT_A5-Stitch.tif")
-        #IJ.selectWindow("C3-GT_%s-Stitch.tif" %name)
-        c3.setRoi(3000,3000,3000,3000)
+        topLeft_x = int(float(row[2])*4.818 - (length/2))
+        topLeft_y = int(float(row[3])*4.818 - (height/2))
+        c3.setRoi(topLeft_x,topLeft_y, length, height)
         temp_image = c3.crop() # note: does not render, so saves memory
         #temp_image.show()
         IJ.log("Mean: "+row[1])
         if float(row[1]) < 10:
-            
-            #IJ.save(temp_image,"D:/Stem_Cells/Batches/%s/Senescent/cell%i.tiff" %(batch_folder, senescent_counter))
+            IJ.save(temp_image,"D:/Stem_Cells/Batches/%s/Senescent/cell%i.tiff" %(batch_folder, senescent_counter))
             senescent_counter += 1 
             IJ.log("senescent saved")
         elif float(row[1]) > 30:
-            IJ.save(temp_image,"D:/Stem_Cells/A3_Exp/cell%i.tif" %prolif_counter)
+            IJ.save(temp_image,"D:/Stem_Cells/Batches/%s/Prolif/cell%i.tiff" %(batch_folder, prolif_counter))
+            #IJ.save(temp_image,"D:/Stem_Cells/A3_Exp/cell%i.tif" %prolif_counter)
             #IJ.save(temp_image,"D:/Stem_Cells/A3_Exp/sub_exp/cells/test/Proliferative/cell%i.tif" %prolif_counter)
             prolif_counter += 1
             IJ.log("prolif saved")
         else:
-            #IJ.save(temp_image,"D:/Stem_Cells/Batches/%s/Iffy/cell%i.tif" %(batch_folder, iffy_counter))
+            IJ.save(temp_image,"D:/Stem_Cells/Batches/%s/Iffy/cell%i.tif" %(batch_folder, iffy_counter))
             iffy_counter += 1
             IJ.log("iffy saved")
         #temp_image.close()  
-
+        
 for row in csv_reader:
     
-    cropAndSave("A5")
+    cropAndSave("A5", row)
+
      
-    break
+
 
