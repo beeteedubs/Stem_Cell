@@ -6,15 +6,12 @@ import sys
 """
 IJ.log("Beginning Macro")
 test_counter = 0
-
 tiff_path = 'D:/Stem_Cells/All_Tiff_Files'
-
 for file in os.listdir(tiff_path):
     if test_counter > 1:
         break
     IJ.log(file)
     test_counter+=1
-
 THIS WORKS, COMMENTED OUT FOR NOW CUZ SLOW
 infile = "D:/A3 Exp/sub exp/GT A3_Stitch.tif"
 curr_image = IJ.openImage(infile) # type: imagePlus
@@ -45,18 +42,17 @@ def preprocess(filePath, fileName, fileID):
     c1, c2, c3 = ChannelSplitter.split(curr) # type:
     c1.show()
     c2.show()
-    c3.show()
     IJ.run(c1,"Gaussian Blur...","sigma=%i" %radius)
     IJ.setThreshold(c1, lowerThreshold, upperThreshold)
-    
-
+ 
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID)
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_A4-Stitch.tif decimal=1")
     IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID) # there is a space after "redirect ="
     # produces 1980 cells but totally wrong measurements, record them next time when continued manually
     IJ.run(c1, "Analyze Particles...", "size=%i-Infinity circularity=%i-1.00 display exclude include" %(size, circularity))
-    sys.exit(0)
-
+    c1.changes = False
+    c1.close()
+    c2.close()
     return c3
 
 def csvPreprocess(fileID):
@@ -130,7 +126,7 @@ def main():
         channel = preprocess(tiff_path, file, fileID)
         data = csvPreprocess(fileID)
 
-        #for row in data:
-        #    cropAndSave(row, channel)
+        for row in data:
+            cropAndSave(row, channel)
         sys.exit(0)
 main()
