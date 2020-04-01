@@ -1,6 +1,5 @@
-
 import csv                      # Jython only has standard Python libraries, no Pandas for dataframes means importing csv
-from ij import IJ               # crazy, but can use .jar files, I think must be in same folder as script
+from ij import IJ, Prefs        # crazy, but can use .jar files, I think must be in same folder as script
 import os
 from ij.plugin import ChannelSplitter
 import sys
@@ -44,12 +43,20 @@ def preprocess(filePath, fileName, fileID):
 
     curr = IJ.openImage(filePath + '/' + fileName)
     c1, c2, c3 = ChannelSplitter.split(curr) # type:
+    c1.show()
+    c2.show()
+    c3.show()
     IJ.run(c1,"Gaussian Blur...","sigma=%i" %radius)
     IJ.setThreshold(c1, lowerThreshold, upperThreshold)
+    
+
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID)
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_A4-Stitch.tif decimal=1")
-    IJ.run("Set Measurements...", "mean center redirect =C2-GT_%s-Stitch.tif decimal - 1" %fileID)
+    IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID) # there is a space after "redirect ="
+    # produces 1980 cells but totally wrong measurements, record them next time when continued manually
     IJ.run(c1, "Analyze Particles...", "size=%i-Infinity circularity=%i-1.00 display exclude include" %(size, circularity))
+    sys.exit(0)
+
     return c3
 
 def csvPreprocess(fileID):
