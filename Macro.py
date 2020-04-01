@@ -61,6 +61,8 @@ def csvPreprocess(fileID):
     IJ.saveAs("Results", "D:/Stem_Cells/Batches/%s/CSV_Results/%s.csv" %(batch_folder, fileID))
     csv_file = open('D:/Stem_Cells/Batches/%s/CSV_Results/%s.csv' %(batch_folder, fileID))
     csv_reader = csv.reader(csv_file)
+    IJ.selectWindow("Results")
+    IJ.run("Close")
     next(csv_reader)
     return csv_reader
 
@@ -128,5 +130,5 @@ def main():
 
         for row in data:
             cropAndSave(row, channel)
-        sys.exit(0)
+        
 main()
