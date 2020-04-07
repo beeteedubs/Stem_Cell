@@ -20,13 +20,14 @@ curr_image.show()
 
 prolif_counter, iffy_counter, senescent_counter = 1,1,1
 
+bytesInMB = 1000*1000
 length, height = 200, 200
 batch_folder = "Batch_1"
 radius = 4
 lowerThreshold = 30.0
 upperThreshold = 255.0
-circularity = 0.70
-size = 50.00
+circularity = '0.70'
+size = '50.00'
 
 tiff_path = 'D:/Stem_Cells/All_Tiff_Files'
 
@@ -37,19 +38,23 @@ def preprocess(filePath, fileName, fileID):
     global size
     global lowerThreshold
     global upperThreshold
+    global bytesInMB
 
     curr = IJ.openImage(filePath + '/' + fileName)
     c1, c2, c3 = ChannelSplitter.split(curr) # type:
     c1.show()
     c2.show()
+    IJ.log("before blur: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
     IJ.run(c1,"Gaussian Blur...","sigma=%i" %radius)
+    IJ.log("after blur: " +  str(IJ.currentMemory()/bytesInMB) + " MB" + "\n")
     IJ.setThreshold(c1, lowerThreshold, upperThreshold)
  
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID)
     #IJ.run("Set Measurements...", "mean center redirect=C2-GT_A4-Stitch.tif decimal=1")
     IJ.run("Set Measurements...", "mean center redirect=C2-GT_%s-Stitch.tif decimal=1" %fileID) # there is a space after "redirect ="
     # produces 1980 cells but totally wrong measurements, record them next time when continued manually
-    IJ.run(c1, "Analyze Particles...", "size=%i-Infinity circularity=%i-1.00 display exclude include" %(size, circularity))
+    IJ.run(c1, "Analyze Particles...", "size=50.00-Infinity circularity=0.70-1.00 show=Nothing display exclude include")
+    # I suspect that IJ.run(c1, "Analyze Particles...", "size=%s-Infinity circularity=%s-1.00 show=Nothing display exclude include" %(size, circularity)) works
     c1.changes = False
     c1.close()
     c2.close()
@@ -122,13 +127,29 @@ def cropAndSave(row, channel):
 #next(csv_reader)
 
 def main():
-
+    global bytesInMB
+    x = 3
     for file in os.listdir(tiff_path): # goes through each tiff file 
         fileID = file[3:5] # ex: A3
         channel = preprocess(tiff_path, file, fileID)
+        IJ.log("after preprocess: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+        IJ.run("Collect Garbage")
+        IJ.log("after garbage collect/before csvPreprocess: " +  str(IJ.currentMemory()/bytesInMB) + " MB" + "\n")
         data = csvPreprocess(fileID)
-
+        IJ.log("after csvPreprocess: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+        IJ.run("Collect Garbage")
+        IJ.log("after garbage collect: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+        sys.exit(0)
+        """
         for row in data:
             cropAndSave(row, channel)
-        
+            IJ.log("after cropAndSave: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+            IJ.run("Collect Garbage")
+            IJ.log("after garbage collect: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+        if x == 0:
+            IJ.log("current memory: " +  str(IJ.currentMemory()/bytesInMB) + " MB")
+            IJ.log("WOOT RAN 3 TIMES")
+            sys.exit(0)
+        x = x-1
+        """
 main()
